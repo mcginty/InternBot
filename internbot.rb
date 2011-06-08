@@ -16,7 +16,7 @@ class InternBot
 
     @@commands = {
         "face" => {
-            :admin      => false, # does this require an op to give the command?
+            :auth       => :normal, # does this require an op to give the command?
             :exact_args => 1,     # an exact arg is an argument without a space
             :excess     => false, # whether other "excess" args are wanted
             :func  => lambda { |nick, arg|
@@ -35,7 +35,7 @@ class InternBot
             },
         },
         "whois" => {
-            :admin      => false,
+            :auth       => :normal,
             :exact_args => 1,
             :excess     => false,
             :func  => lambda { |nick, arg|
@@ -54,7 +54,7 @@ class InternBot
             },
         },
         "op" => {
-            :admin      => true,
+            :auth       => :op,
             :exact_args => 1,
             :excess     => false,
             :func  => lambda { |nick, arg|
@@ -66,7 +66,7 @@ class InternBot
             },
         },
         "deop" => {
-            :admin      => true,
+            :auth       => :op,
             :exact_args => 1,
             :excess     => false,
             :func  => lambda { |nick, arg|
@@ -75,7 +75,7 @@ class InternBot
             },
         },
         "make me a" => {
-            :admin      => true,
+            :auth       => :op,
             :exact_args => 0,
             :excess     => true,
             :func  => lambda { |nick, arg|
@@ -87,7 +87,7 @@ class InternBot
             },
         },
         "#{@@nick} stfu" => {
-            :admin      => true,
+            :auth       => :op,
             :exact_args => 0,
             :excess     => false,
             :func  => lambda { |nick|
@@ -96,7 +96,7 @@ class InternBot
             },
         },
         "#{@@nick} wtfu" => {
-            :admin      => true,
+            :auth       => :op,
             :exact_args => 0,
             :excess     => false,
             :func  => lambda { |nick|
@@ -105,7 +105,7 @@ class InternBot
             },
         },
         "#{@@nick} gtfo" => {
-            :admin      => true,
+            :auth       => :op,
             :exact_args => 0,
             :excess     => false,
             :func  => lambda { |nick|
@@ -127,7 +127,7 @@ class InternBot
             # check if the message is a given command
             @@commands.each do |command, cmd_info|
                 # apply admin prefix
-                if cmd_info[:admin] and InternDB.is_op?(nick, amzn_user)
+                if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
                     command = @@admin_prefix + command
                 else
                     next

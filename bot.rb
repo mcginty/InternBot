@@ -26,6 +26,12 @@ create table ops (
     host TEXT
 );
 
+create table voices (
+    voice_id INTEGER PRIMARY KEY,
+    nick TEXT,
+    host TEXT
+);
+
 create table bros (
     bro_id INTEGER PRIMARY KEY,
     bro TEXT
