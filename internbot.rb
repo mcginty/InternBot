@@ -1,6 +1,9 @@
 require 'socket'
 require 'uri'
+require 'InternDB'
 require 'IRCHole'
+require 'rubygems'
+require 'sqlite3'
 
 class InternBot
     @@irc = nil
@@ -13,11 +16,13 @@ class InternBot
 
     @@commands = {
         "face" => {
-            :admin => false,
-            :args  => 1,
+            :admin      => false, # does this require an op to give the command?
+            :exact_args => 1,     # an exact arg is an argument without a space
+            :excess     => false, # whether other "excess" args are wanted
             :func  => lambda { |nick, arg|
                 @@irc.putraw "WHOIS #{arg}"
                 whois = @@irc.getraw
+                whois = whois.split(" ")[4]
                 if arg == @@nick
                     @@irc.speak "Do I look like a bitch to you?"
                     return
@@ -30,11 +35,13 @@ class InternBot
             },
         },
         "whois" => {
-            :admin => false,
-            :args  => 1,
+            :admin      => false,
+            :exact_args => 1,
+            :excess     => false,
             :func  => lambda { |nick, arg|
                 @@irc.putraw "WHOIS #{arg}"
                 whois = @@irc.getraw
+                whois = whois.split(" ")[4]
                 if arg == @@irc.nick
                     @@irc.speak "Do I look like a bitch to you?"
                     return
@@ -47,48 +54,60 @@ class InternBot
             },
         },
         "op" => {
-            :admin => true,
-            :args  => 1,
+            :admin      => true,
+            :exact_args => 1,
+            :excess     => false,
             :func  => lambda { |nick, arg|
-                # TODO add sql to add to oplist
+                @@irc.putraw "WHOIS #{arg}"
+                whois = @@irc.getraw
+                whois = whois.split(" ")[4]
+                InternDB.add_op(arg, whois)
                 @@irc.op arg
             },
         },
         "deop" => {
-            :admin => true,
-            :args  => 1,
+            :admin      => true,
+            :exact_args => 1,
+            :excess     => false,
             :func  => lambda { |nick, arg|
-                # TODO add sql to remove from oplist
+                InternDB.remove_op arg
                 @@irc.deop arg
             },
         },
         "make me a" => {
-            :admin => true,
-            :args  => 1,
+            :admin      => true,
+            :exact_args => 0,
+            :excess     => true,
             :func  => lambda { |nick, arg|
                 arg = arg.join(" ") if arg.kind_of? Array
+                if arg.empty?
+                    return
+                end
                 @@irc.speak "Make your own damn #{arg}"
             },
         },
         "#{@@nick} stfu" => {
-            :admin => true,
-            :args  => 0,
+            :admin      => true,
+            :exact_args => 0,
+            :excess     => false,
             :func  => lambda { |nick|
                 @@irc.speak "fine."
                 @@irc.stfu
             },
         },
         "#{@@nick} wtfu" => {
-            :admin => true,
-            :args  => 0,
+            :admin      => true,
+            :exact_args => 0,
+            :excess     => false,
             :func  => lambda { |nick|
                 @@irc.speak "so now you need me."
                 @@irc.wtfu
             },
         },
         "#{@@nick} gtfo" => {
-            :admin => true,
-            :args  => 0,
+            :admin      => true,
+            :exact_args => 0,
+            :excess     => false,
             :func  => lambda { |nick|
                 @@irc.speak "whateva."
                 exit
@@ -96,29 +115,36 @@ class InternBot
         },
     }
 
+    class << self
 
-    def initialize
-        @@irc = IRCHole.new(@@server, @@port, @@nick, @@channel, method(:command_handler))
-    end
+        def start(db)
+            InternDB.connect(db)
+            @@irc = IRCHole.new(@@server, @@port, @@nick, @@channel, method(:command_handler))
+            @@irc.start
+        end
 
-    def start
-        @@irc.start
-    end
+        def command_handler(nick, amzn_user, msg)
+            # check if the message is a given command
+            @@commands.each do |command, cmd_info|
+                # apply admin prefix
+                if cmd_info[:admin] and InternDB.is_op?(nick, amzn_user)
+                    command = @@admin_prefix + command
+                else
+                    next
+                end
 
-    def command_handler(nick, amzn_user, msg)
-        # check if the message is a given command
-        @@commands.each do |command, cmd_info|
-            @@irc.debug "trying command " + command
-            # apply admin prefix
-            if cmd_info[:admin]
-                command = @@admin_prefix + command
-            end
+                if msg.start_with? command
+                    msg = msg[command.length..-1].strip # cut off command from message
+                    @@irc.debug "command: "+command
 
-            if msg.start_with? command
-                msg = msg[command.length..-1].strip # cut off command from message
-                @@irc.debug "^ found this one"
-                cmd_info[:func].call(nick, msg)
-                break
+                    # put args in array, and the excess as a string
+                    args = msg.split(" ")[0..(cmd_info[:exact_args]-1)]
+                    if cmd_info[:excess]
+                        args << msg.split(" ")[cmd_info[:exact_args]..-1].join(" ")
+                    end
+                    cmd_info[:func].call(nick, *args)
+                    break
+                end
             end
         end
     end
