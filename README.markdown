@@ -1,6 +1,8 @@
 InternBot
 =========
-Originally hacked up by Jake McGinty
+Originally hacked up with the primary purpose of annoying all the interns on the chat channel and the secondary purpose of providing some useful tools to expedite the ramp-up process.
+
+Message me if you have any questions. If you're reading this, you have access to this private repo anyway, so feel free to commit changes as you see fit.
 
 Normal Commands
 ---------------
