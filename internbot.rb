@@ -11,7 +11,7 @@ class InternBot
 
     @@server = "irc.amazon.com"
     @@port = "6667"
-    @@nick = "internbot"
+    @@nick = "internbro"
     @@channel = "#intern"
 
     @@commands = {
@@ -41,7 +41,7 @@ class InternBot
                 @@irc.putraw "WHOIS #{arg}"
                 whois = @@irc.getraw
                 whois = whois.split(" ")[4]
-                if arg == @@irc.nick
+                if arg == @@nick
                     return "Do I look like a bitch to you?"
                 end
                 if whois != ":No"
@@ -100,24 +100,25 @@ class InternBot
                 return "#{arg} shunned from the magical forest of ents and things."
             },
         },
-        "punish" => {
-            :auth       => :op,
-            :exact_args => 1,
-            :excess     => false,
-            :func  => lambda { |nick, user|
-                @@irc.punish user
-                return "#{user} being whipped sexily."
-            },
-        },
-        "neutralize" => {
-            :auth       => :op,
-            :exact_args => 0,
-            :excess     => false,
-            :func  => lambda { |nick|
-                @@irc.neutralize
-                return "All is well again."
-            },
-        },
+        # TODO change punish to voice/devoice at max users per command
+        #"punish" => {
+        #    :auth       => :op,
+        #    :exact_args => 1,
+        #    :excess     => false,
+        #    :func  => lambda { |nick, user|
+        #        @@irc.punish user
+        #        return "#{user} being whipped sexily."
+        #    },
+        #},
+        #"neutralize" => {
+        #    :auth       => :op,
+        #    :exact_args => 0,
+        #    :excess     => false,
+        #    :func  => lambda { |nick|
+        #        @@irc.neutralize
+        #        return "All is well again."
+        #    },
+        #},
         "make me a" => {
             :auth       => :op,
             :exact_args => 0,
@@ -189,6 +190,9 @@ class InternBot
                 # apply admin prefix
                 if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
                     command = @@admin_prefix + command
+                elsif
+                    cmd_info[:auth] == :op and not InternDB.is_op?(nick, amzn_user)
+                    break
                 end
 
                 if (cmd_info[:exact_args] > 0 and msg.start_with?(command+" ")) or (cmd_info[:exact_args] == 0 and msg.start_with?(command))
@@ -203,6 +207,9 @@ class InternBot
                     end
                     if cmd_info[:excess]
                         args << msg.split(" ")[cmd_info[:exact_args]..-1].join(" ")
+                    end
+                    if args.length < cmd_info[:exact_args]
+                        break
                     end
                     response = cmd_info[:func].call(nick, *args)
                     if priv
