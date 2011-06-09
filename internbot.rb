@@ -191,8 +191,8 @@ class InternBot
                     command = @@admin_prefix + command
                 end
 
-                if msg.start_with? command
-                    msg = msg[command.length..-1].strip # cut off command from message
+                if (cmd_info[:exact_args] > 0 and msg.start_with?(command+" ")) or (cmd_info[:exact_args] == 0 and msg.start_with?(command))
+                    msg = msg[(command.length+1)..-1].strip # cut off command from message
                     @@irc.debug "command: "+command
 
                     # put args in array, and the excess as a string

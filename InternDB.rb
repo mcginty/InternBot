@@ -19,7 +19,7 @@ class InternDB
 
         def remove_op(user)
             user.gsub(/'/, "\\'")
-            @@db.execute("delete from ops where nick='#{nick}'")
+            @@db.execute("delete from ops where nick='#{user}'")
         end
         
         def is_op?(nick, host)
