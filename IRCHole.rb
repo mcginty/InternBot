@@ -30,7 +30,7 @@ class IRCHole
         @command_callback = command_callback # command handler
 
         ## Channel
-        @opped = @voiced = @peons = nil
+        @opped = @voiced = @peons = nil # TODO KEEP TRACK OF OPPED VOICE AND PEON
     end
 
     def debug(msg)
@@ -71,14 +71,16 @@ class IRCHole
         @stfu = false
     end
 
-    # TODO add error checking for socket
     def putraw(raw)
-        @s.puts raw
+        @s.puts raw unless not @s
     end
 
-    # TODO add error checking for socket
     def getraw
-        return @s.gets
+        if @s
+            return @s.gets
+        else
+            return nil
+        end
     end
 
     # main loop, no arguments
@@ -92,6 +94,7 @@ class IRCHole
         # main receive loop
         until @s.eof? do
             msg = @s.gets
+            msg_pieces = msg.split(':')
             debug msg
             # stay-alive
             if msg.start_with?("PING")
@@ -99,18 +102,20 @@ class IRCHole
                 @s.puts pongback
                 debug pongback
             # auto-op the oplisted members
-            #elsif msg.index("JOIN :#{@channel}")
-            #    msg_pieces = msg.split(':')
-            #    user_info = msg_pieces[1].split('@')[0]
-            #    if @oplist.index(user_info) != nil
-            #        @s.puts "MODE #{@channel} +o #{user_info.split("!")[0]}"
-            #    end
+            elsif msg.index("JOIN :#{@channel}")
+                user_info = msg_pieces[1].split('@')[0].split('!')
+                if InternDB.is_op?(user_info[0], user_info[1])
+                    @s.puts "MODE #{@channel} +o #{user_info[0]}"
+                end
             # command parsing
             elsif msg.index("PRIVMSG #{@channel} :")
-                msg_pieces = msg.split(':')
                 user_info = msg_pieces[1].split('@')[0]
                 user_info = user_info.split('!')
-                @command_callback.call(user_info[0], user_info[1], msg_pieces[2..-1].join(":"))
+                @command_callback.call(false, user_info[0], user_info[1], msg_pieces[2..-1].join(":"))
+            elsif msg.index("PRIVMSG #{@nick} :")
+                user_info = msg_pieces[1].split('@')[0]
+                user_info = user_info.split('!')
+                @command_callback.call(true, user_info[0], user_info[1], msg_pieces[2..-1].join(":"))
             end
         end
     end

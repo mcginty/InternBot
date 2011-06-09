@@ -9,9 +9,9 @@ class InternBot
     @@irc = nil
     @@admin_prefix = "sudo "
 
-    @@server = "irc.freenode.net"
+    @@server = "irc.amazon.com"
     @@port = "6667"
-    @@nick = "internbot"
+    @@nick = "internbot2"
     @@channel = "#internbot"
 
     @@commands = {
@@ -24,13 +24,12 @@ class InternBot
                 whois = @@irc.getraw
                 whois = whois.split(" ")[4]
                 if arg == @@nick
-                    @@irc.speak "Do I look like a bitch to you?"
-                    return
+                    return "Do I look like a bitch to you?"
                 end
                 if whois != ":No"
-                    @@irc.speak "#{arg}'s face: https://internal.amazon.com/phone/phone-image.cgi?uid=#{whois}"
+                    return "#{arg}'s face: https://internal.amazon.com/phone/phone-image.cgi?uid=#{whois}"
                 else
-                    message "This IRC user is faceless. Find nearest shelter."
+                    return "This IRC user is faceless. Find nearest shelter."
                 end
             },
         },
@@ -43,14 +42,22 @@ class InternBot
                 whois = @@irc.getraw
                 whois = whois.split(" ")[4]
                 if arg == @@irc.nick
-                    @@irc.speak "Do I look like a bitch to you?"
-                    return
+                    return "Do I look like a bitch to you?"
                 end
                 if whois != ":No"
-                    @@irc.speak "#{arg}'s lookup: https://contactstool.amazon.com/ac/can/people/find/#{whois}"
+                    return "#{arg}'s lookup: https://contactstool.amazon.com/ac/can/people/find/#{whois}"
                 else
-                    message "This IRC user is faceless. Find nearest shelter."
+                    return "This IRC user is faceless. Find nearest shelter."
                 end
+            },
+        },
+        "add bro" => {
+            :auth       => :normal,
+            :exact_args => 0,
+            :excess     => true,
+            :func  => lambda { |nick, bro|
+                InternDB.add_bro(bro)
+                return "Bro added."
             },
         },
         "op" => {
@@ -74,6 +81,14 @@ class InternBot
                 @@irc.deop arg
             },
         },
+        "punish" => {
+            :auth       => :op,
+            :exact_args => 1,
+            :excess     => false,
+            :func  => lambda { |nick, arg|
+                # TODO add punish feature
+            },
+        },
         "make me a" => {
             :auth       => :op,
             :exact_args => 0,
@@ -83,7 +98,7 @@ class InternBot
                 if arg.empty?
                     return
                 end
-                @@irc.speak "Make your own damn #{arg}"
+                return "Make your own damn #{arg}"
             },
         },
         "#{@@nick} stfu" => {
@@ -91,7 +106,8 @@ class InternBot
             :exact_args => 0,
             :excess     => false,
             :func  => lambda { |nick|
-                @@irc.speak "fine."
+                # workaround because you can't speak after stfu
+                @@irc.speak "going stealth."
                 @@irc.stfu
             },
         },
@@ -100,8 +116,8 @@ class InternBot
             :exact_args => 0,
             :excess     => false,
             :func  => lambda { |nick|
-                @@irc.speak "so now you need me."
                 @@irc.wtfu
+                return "so now you need me."
             },
         },
         "#{@@nick} gtfo" => {
@@ -110,6 +126,7 @@ class InternBot
             :excess     => false,
             :func  => lambda { |nick|
                 @@irc.speak "whateva."
+                @@irc.putraw "QUIT"
                 exit
             },
         },
@@ -123,11 +140,11 @@ class InternBot
             @@irc.start
         end
 
-        def command_handler(nick, amzn_user, msg)
+        def command_handler(priv, nick, amzn_user, msg)
             # check if the message is a given command
             @@commands.each do |command, cmd_info|
                 # apply admin prefix
-                if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
+                if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user) or cmd_info
                     command = @@admin_prefix + command
                 else
                     next
@@ -138,12 +155,21 @@ class InternBot
                     @@irc.debug "command: "+command
 
                     # put args in array, and the excess as a string
-                    args = msg.split(" ")[0..(cmd_info[:exact_args]-1)]
+                    if cmd_info[:exact_args] > 0
+                        args = msg.split(" ")[0..(cmd_info[:exact_args]-1)]
+                    else
+                        args = []
+                    end
                     if cmd_info[:excess]
                         args << msg.split(" ")[cmd_info[:exact_args]..-1].join(" ")
                     end
-                    cmd_info[:func].call(nick, *args)
-                    break
+                    response = cmd_info[:func].call(nick, *args)
+                    if priv
+                        @@irc.privmsg(response, nick) unless not response
+                    else
+                        @@irc.speak(response) unless not response
+                    end
+                    break # out of the command loop if we found on successfully
                 end
             end
         end
