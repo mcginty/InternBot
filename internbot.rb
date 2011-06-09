@@ -11,8 +11,8 @@ class InternBot
 
     @@server = "irc.amazon.com"
     @@port = "6667"
-    @@nick = "internbot2"
-    @@channel = "#internbot"
+    @@nick = "internbot"
+    @@channel = "#intern"
 
     @@commands = {
         "face" => {
@@ -51,6 +51,14 @@ class InternBot
                 end
             },
         },
+        "bro me"  => {
+            :auth       => :normal,
+            :exact_args => 0,
+            :excess     => false,
+            :func  => lambda { |nick|
+                return "Sure thing, " + InternDB.random_bro + "."
+            },
+        },
         "add bro" => {
             :auth       => :normal,
             :exact_args => 0,
@@ -58,6 +66,15 @@ class InternBot
             :func  => lambda { |nick, bro|
                 InternDB.add_bro(bro)
                 return "Bro added."
+            },
+        },
+        "ice bro" => {
+            :auth       => :op,
+            :exact_args => 0,
+            :excess     => true,
+            :func  => lambda { |nick, bro|
+                InternDB.remove_bro(bro)
+                return "Iced. Smooth move, brah."
             },
         },
         "op" => {
@@ -70,6 +87,7 @@ class InternBot
                 whois = whois.split(" ")[4]
                 InternDB.add_op(arg, whois)
                 @@irc.op arg
+                return "#{arg} welcomed into the magical kingdom."
             },
         },
         "deop" => {
@@ -79,14 +97,25 @@ class InternBot
             :func  => lambda { |nick, arg|
                 InternDB.remove_op arg
                 @@irc.deop arg
+                return "#{arg} shunned from the magical forest of ents and things."
             },
         },
         "punish" => {
             :auth       => :op,
             :exact_args => 1,
             :excess     => false,
-            :func  => lambda { |nick, arg|
-                # TODO add punish feature
+            :func  => lambda { |nick, user|
+                @@irc.punish user
+                return "#{user} being whipped sexily."
+            },
+        },
+        "neutralize" => {
+            :auth       => :op,
+            :exact_args => 0,
+            :excess     => false,
+            :func  => lambda { |nick|
+                @@irc.neutralize
+                return "All is well again."
             },
         },
         "make me a" => {
@@ -101,6 +130,20 @@ class InternBot
                 return "Make your own damn #{arg}"
             },
         },
+        #"begin annoying transfer" => {
+        #    :auth       => :op,
+        #    :exact_args => 0,
+        #    :excess     => false,
+        #    :func => lambda {|nick|
+        #        200.times do
+        #            @@irc.speak "bro me"
+        #            broraw = @@irc.getraw
+        #            bro = broraw.split(':')[2..-1].join(':').delete(2.chr).delete('.').gsub(/Sure thing, /, '')
+        #            InternDB.add_bro(bro)
+        #            sleep 1
+        #        end
+        #    },
+        #},
         "#{@@nick} stfu" => {
             :auth       => :op,
             :exact_args => 0,
@@ -144,10 +187,8 @@ class InternBot
             # check if the message is a given command
             @@commands.each do |command, cmd_info|
                 # apply admin prefix
-                if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user) or cmd_info
+                if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
                     command = @@admin_prefix + command
-                else
-                    next
                 end
 
                 if msg.start_with? command

@@ -30,7 +30,9 @@ class IRCHole
         @command_callback = command_callback # command handler
 
         ## Channel
-        @opped = @voiced = @peons = nil # TODO KEEP TRACK OF OPPED VOICE AND PEON
+        @ops = []
+        @voices = []
+        @peons = [] # TODO KEEP TRACK OF OPPED VOICE AND PEON
     end
 
     def debug(msg)
@@ -55,12 +57,41 @@ class IRCHole
         end
     end
 
+    def voice(user)
+        putraw "MODE #{@channel} +v #{user}"
+    end
+
+    def devoice(user)
+        putraw "MODE #{@channel} -v #{user}"
+    end
+
     def op(user)
         putraw "MODE #{@channel} +o #{user}"
     end
 
     def deop(user)
         putraw "MODE #{@channel} -o #{user}"
+    end
+
+    def punish(user)
+        if @voices.index(user) != nil
+            devoice user
+            return
+        end
+        @peons.each do |peon|
+            if peon == user
+                next
+            end
+            voice peon
+        end
+        putraw "MODE #{@channel} +m"
+    end
+
+    def neutralize
+        @voices.each do |user|
+            devoice user
+        end
+        putraw "MODE #{@channel} -m"
     end
 
     def stfu
@@ -96,18 +127,61 @@ class IRCHole
             msg = @s.gets
             msg_pieces = msg.split(':')
             debug msg
+
             # stay-alive
             if msg.start_with?("PING")
                 pongback = "PONG " + msg.split(":")[1]
                 @s.puts pongback
                 debug pongback
+            # initial userlist
+            elsif msg.index("#{@nick} = #{@channel} :")
+                userlist = msg_pieces[2].split(' ')
+                debug 'userlist: ' + userlist.join(' ')
+                userlist.each do |user|
+                    if user.start_with? '@' # they're opped
+                        @ops << user[1..-1]
+                    elsif user.start_with? '+' #they're voiced
+                        @voices << user[1..-1]
+                    else # they suck
+                        @peons << user
+                    end
+                end
+                debug 'ops: ' + @ops.join(' ')
+                debug 'voices: ' + @voices.join(' ')
+                debug 'peons: ' + @peons.join(' ')
             # auto-op the oplisted members
             elsif msg.index("JOIN :#{@channel}")
                 user_info = msg_pieces[1].split('@')[0].split('!')
+                @peons << user_info[0] unless user_info[0] == @nick
                 if InternDB.is_op?(user_info[0], user_info[1])
                     @s.puts "MODE #{@channel} +o #{user_info[0]}"
                 end
+            elsif msg.index("LEAVE :#{@channel}")
+                user_info = msg_pieces[1].split('@')[0].split('!')
+                @ops.delete(user_info[0])
+                @voices.delete(user_info[0])
+                @peons.delete(user_info[0])
             # command parsing
+            elsif msg.index("MODE #{@channel} ")
+                parts = msg.split(' ')
+                if parts[3] == '+o'
+                    @peons.delete(parts[4])
+                    @voices.delete(parts[4])
+                    @ops << parts[4]
+                elsif parts[3] == '-o'
+                    @ops.delete(parts[4])
+                    @peons << parts[4]
+                elsif parts[3] == '+v'
+                    @peons.delete(parts[4])
+                    @voices << parts[4]
+                elsif
+                    parts[3] == '-v'
+                    @voices.delete(parts[4])
+                    @peons << parts[4]
+                end
+                debug 'ops: ' + @ops.join(' ')
+                debug 'voices: ' + @voices.join(' ')
+                debug 'peons: ' + @peons.join(' ')
             elsif msg.index("PRIVMSG #{@channel} :")
                 user_info = msg_pieces[1].split('@')[0]
                 user_info = user_info.split('!')

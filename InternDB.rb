@@ -46,11 +46,20 @@ class InternDB
 
         # BROS TABLE
         def add_bro(bro)
-            bro.gsub(/'/, "\\'")
-            bro.capitalize!
+            bro = bro.gsub(/'/, "''")
             if @@db.execute("select * from bros where bro='#{bro}'").length == 0
                 @@db.execute("insert into bros (bro) values ('#{bro}')")
             end
+        end
+
+        def remove_bro(bro)
+            bro = bro.gsub(/'/, "''")
+            @@db.execute("delete from bros where bro='#{bro}'")
+        end
+
+        def random_bro
+            bros = @@db.execute("select bro from bros")
+            return bros.choice[0]
         end
 
         def list_bros
