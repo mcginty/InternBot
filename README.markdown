@@ -24,6 +24,7 @@ Admin Commands
         deop <irc user>
 
 * Hatred stuff
+
     `punish` will voice everybody but the user being punished, then mute the channel. Neutralize reverses.
 
         punish <irc user>
@@ -39,6 +40,6 @@ Admin Commands
 
         ice bro <bro name that sucks the big donker>
 
-Misc
+* Misc
 
         make me a <sammich>
