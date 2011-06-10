@@ -188,10 +188,10 @@ class InternBot
             # check if the message is a given command
             @@commands.each do |command, cmd_info|
                 # apply admin prefix
-                if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
+                if cmd_info[:auth] == :op and not InternDB.is_op?(nick, amzn_user)
+                    next
+                elsif cmd_info[:auth] == :op
                     command = @@admin_prefix + command
-                elsif cmd_info[:auth] == :op and not InternDB.is_op?(nick, amzn_user)
-                    break
                 end
 
                 if (cmd_info[:exact_args] > 0 and msg.start_with?(command+" ")) or (cmd_info[:exact_args] == 0 and msg.start_with?(command))
