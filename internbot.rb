@@ -1,8 +1,8 @@
 require 'socket'
 require 'uri'
 require 'InternDB'
-require 'IRCHole'
 require 'rubygems'
+require 'IRCHole'
 require 'sqlite3'
 
 class InternBot
@@ -13,6 +13,7 @@ class InternBot
     @@port = "6667"
     @@nick = "internbro"
     @@channel = "#intern"
+
 
     @@commands = {
         "face" => {
@@ -95,7 +96,6 @@ class InternBot
             :exact_args => 1,
             :excess     => false,
             :func  => lambda { |nick, arg|
-                InternDB.remove_op arg
                 @@irc.deop arg
                 return "#{arg} shunned from the magical forest of ents and things."
             },

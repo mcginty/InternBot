@@ -18,26 +18,28 @@ end
 
 # code time
 if opts[:createdb]
-    db = SQLite3::Database.new(opts[:db])
-    sql = <<SQL
-create table ops (
-    op_id INTEGER PRIMARY KEY,
-    nick TEXT,
-    host TEXT
-);
-
-create table voices (
-    voice_id INTEGER PRIMARY KEY,
-    nick TEXT,
-    host TEXT
-);
-
-create table bros (
-    bro_id INTEGER PRIMARY KEY,
-    bro TEXT
-);
-
-insert into ops (nick, host) values ( 'jakemc', 'jakemc' );
+  db = SQLite3::Database.new(opts[:db])
+  sql = <<SQL
+BEGIN TRANSACTION;
+CREATE TABLE users (
+user_id INTEGER PRIMARY KEY,
+nick TEXT,
+host TEXT,
+last_seen INTEGER);
+INSERT INTO "users" VALUES(1,'jakemc','jakemc',NULL);
+INSERT INTO "users" VALUES(2,'ckenna','ckenna',NULL);
+CREATE TABLE ops (
+op_id INTEGER PRIMARY KEY,
+user_id INTEGER);
+INSERT INTO "ops" VALUES(1,1);
+INSERT INTO "ops" VALUES(2,2);
+CREATE TABLE voices (
+voice_id INTEGER PRIMARY KEY,
+user_id INTEGER);
+CREATE TABLE bros(
+bro_id INTEGER PRIMARY KEY,
+bro TEXT);
+COMMIT;
 SQL
     db.execute_batch(sql)
 else
