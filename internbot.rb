@@ -11,7 +11,7 @@ class InternBot
 
     @@server = "irc.amazon.com"
     @@port = "6667"
-    @@nick = "internbro"
+    @@nick = "internbot"
     @@channel = "#intern"
 
     @@commands = {
@@ -190,8 +190,7 @@ class InternBot
                 # apply admin prefix
                 if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
                     command = @@admin_prefix + command
-                elsif
-                    cmd_info[:auth] == :op and not InternDB.is_op?(nick, amzn_user)
+                elsif cmd_info[:auth] == :op and not InternDB.is_op?(nick, amzn_user)
                     break
                 end
 
