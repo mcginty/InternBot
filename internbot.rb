@@ -195,6 +195,14 @@ class InternBot
         end
 
         def command_handler(priv, nick, amzn_user, msg)
+            # SPECIAL CASE: commands listings.
+            if msg == "#{@@nick} commands"
+                cmdlist = []
+                @@commands.each do |command, cmd_info|
+                    cmdlist << command
+                end
+                @@irc.speak cmdlist.join(' ')
+            end
             # check if the message is a given command
             @@commands.each do |command, cmd_info|
                 # apply admin prefix

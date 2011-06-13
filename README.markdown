@@ -8,6 +8,10 @@ Normal Commands
 ---------------
 *NOTE*: All commands can be sent in either the channel internbot is residing in or via private message (`/msg internbot <cmd>` or `/query internbot` to open a chat)
 
+* Commands Listing
+
+        internbot commands
+
 * WHOIS-type lookups
 
         whois <irc user>
@@ -33,10 +37,10 @@ Admin Commands
         neutralize
 
 * Internbot
-
         internbot stfu
         internbot wtfu
         internbot gtfo
+        say <whatever you want it to say>
 
 * Bro mod
 
