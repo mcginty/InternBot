@@ -11,7 +11,7 @@ class InternBot
 
     @@server = "irc.amazon.com"
     @@port = "6667"
-    @@nick = "internbot"
+    @@nick = "internbot" # TODO make "#{@@nick}[stfu]" when on STFU mode
     @@channel = "#intern"
 
     @@commands = {
@@ -33,6 +33,7 @@ class InternBot
                 end
             },
         },
+
         "whois" => {
             :auth       => :normal,
             :exact_args => 1,
@@ -51,6 +52,7 @@ class InternBot
                 end
             },
         },
+
         "bro me"  => {
             :auth       => :normal,
             :exact_args => 0,
@@ -59,6 +61,7 @@ class InternBot
                 return "Sure thing, " + InternDB.random_bro + "."
             },
         },
+
         "add bro" => {
             :auth       => :normal,
             :exact_args => 0,
@@ -68,6 +71,7 @@ class InternBot
                 return "Bro added."
             },
         },
+
         "ice bro" => {
             :auth       => :op,
             :exact_args => 0,
@@ -77,6 +81,7 @@ class InternBot
                 return "Iced. Smooth move, brah."
             },
         },
+
         "op" => {
             :auth       => :op,
             :exact_args => 1,
@@ -90,6 +95,7 @@ class InternBot
                 return "#{arg} welcomed into the magical kingdom."
             },
         },
+
         "deop" => {
             :auth       => :op,
             :exact_args => 1,
@@ -100,6 +106,7 @@ class InternBot
                 return "#{arg} shunned from the magical forest of ents and things."
             },
         },
+
         # TODO change punish to voice/devoice at max users per command
         #"punish" => {
         #    :auth       => :op,
@@ -131,20 +138,21 @@ class InternBot
                 return "Make your own damn #{arg}"
             },
         },
-        #"begin annoying transfer" => {
-        #    :auth       => :op,
-        #    :exact_args => 0,
-        #    :excess     => false,
-        #    :func => lambda {|nick|
-        #        200.times do
-        #            @@irc.speak "bro me"
-        #            broraw = @@irc.getraw
-        #            bro = broraw.split(':')[2..-1].join(':').delete(2.chr).delete('.').gsub(/Sure thing, /, '')
-        #            InternDB.add_bro(bro)
-        #            sleep 1
-        #        end
-        #    },
-        #},
+
+        "say" => {
+            :auth       => :op,
+            :exact_args => 0,
+            :excess     => true,
+            :func => lambda { |nick, arg|
+                arg = arg.join(" ") if arg.kind_of? Array
+                if arg.empty?
+                    return
+                end
+                @@irc.speak arg
+                return nil
+            }
+        },
+
         "#{@@nick} stfu" => {
             :auth       => :op,
             :exact_args => 0,
@@ -155,6 +163,7 @@ class InternBot
                 @@irc.stfu
             },
         },
+
         "#{@@nick} wtfu" => {
             :auth       => :op,
             :exact_args => 0,
@@ -164,6 +173,7 @@ class InternBot
                 return "so now you need me."
             },
         },
+
         "#{@@nick} gtfo" => {
             :auth       => :op,
             :exact_args => 0,
