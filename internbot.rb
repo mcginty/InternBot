@@ -196,10 +196,14 @@ class InternBot
 
         def command_handler(priv, nick, amzn_user, msg)
             # SPECIAL CASE: commands listings.
-            if msg == "#{@@nick} commands"
+            if msg.start_with? "#{@@nick} commands"
                 cmdlist = []
                 @@commands.each do |command, cmd_info|
-                    cmdlist << command
+                    if cmd_info[:auth] == :op and InternDB.is_op?(nick, amzn_user)
+                        cmdlist << "sudo " + command
+                    elsif cmd_info[:auth] != :op
+                        cmdlist << command
+                    end
                 end
                 @@irc.speak cmdlist.join(' ')
             end

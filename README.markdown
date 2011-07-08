@@ -41,7 +41,6 @@ Admin Commands
         internbot stfu
         internbot wtfu
         internbot gtfo
-        say <whatever you want it to say>
 
 * Bro mod
 
@@ -50,3 +49,4 @@ Admin Commands
 * Misc
 
         make me a <sammich>
+        say <whatever you want it to say>
