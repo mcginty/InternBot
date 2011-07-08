@@ -12,7 +12,7 @@ class InternBot
     @@server = "irc.amazon.com"
     @@port = "6667"
     @@nick = "internbot" # TODO make "#{@@nick}[stfu]" when on STFU mode
-    @@channel = "#intern"
+    @@channel = "#intern-chatter"
 
     @@commands = {
         "face" => {
