@@ -61,6 +61,25 @@ class InternBot
                 return "Sure thing, " + InternDB.random_bro + "."
             },
         },
+        
+        "nyan me"  => {
+            :auth       => :normal,
+            :exact_args => 1,
+            :excess     => false,
+            :func  => lambda { |nick, nyans|
+                nyans = nyans.to_i
+                if nyans <= 0
+                  return
+                end
+                nyans-=1
+                nyan_out="nyan"
+                nyans.times do 
+                  nyan_out << " nyan"
+                end
+                puts nyan_out
+                return nyan_out
+            },
+        },
 
         "add bro" => {
             :auth       => :normal,
