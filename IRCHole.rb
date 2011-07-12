@@ -44,6 +44,12 @@ class IRCHole
     def op?(nick)
       @ops.member? nick
     end
+    
+    def list
+      user_list = (@ops << @voices << @peons).flatten
+      user_list.delete "internbot"
+      return userlist
+    end
 
     # message to main channel
     #

@@ -108,7 +108,20 @@ class InternBot
               end
             },
         },
-        
+=begin        
+        "come at me bro" => {
+            :auth       => :normal,
+            :exact_args => 0,
+            :excess     => false,
+            :func  => lambda { |nick|
+              if @@irc.op? nick
+                @@irc.putraw "KICK #{@@channel} #{@@irc.list[rand @@irc.list.size]}"
+              elsif
+                @@irc.putraw "KICK #{@@channel} #{nick}"
+              end
+            },
+        },
+=end        
         "nyan spam" => {
             :auth       => :op,
             :exact_args => 1,
