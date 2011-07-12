@@ -75,8 +75,10 @@ class InternBot
                 nyan_out="nyan"
                 nyans.times do 
                   nyan_out << " nyan"
+                  if nyan_out.length > 426
+                    break
+                  end
                 end
-                puts nyan_out
                 return nyan_out
             },
         },
