@@ -40,6 +40,10 @@ class IRCHole
             puts msg
         end
     end
+    
+    def op?(nick)
+      @ops.member? nick
+    end
 
     # message to main channel
     #

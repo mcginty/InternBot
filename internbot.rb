@@ -82,6 +82,45 @@ class InternBot
                 return nyan_out
             },
         },
+        
+        "sudo nyan me"  => {
+            :auth       => :normal,
+            :exact_args => 1,
+            :excess     => false,
+            :func  => lambda { |nick, nyans|
+              if @@irc.op? nick
+                nyans = nyans.to_i
+                if nyans <= 0
+                  return
+                end
+                nyans-=1
+                nyan_out="nyan"
+                nyans.times do 
+                  if nyan_out.length > 421
+                    @@irc.speak nyan_out
+                    nyan_out = "nyan"
+                  else
+                    nyan_out << " nyan"
+                  end
+                end
+                @@irc.speak nyan_out
+                return
+              end
+            },
+        },
+        
+        "nyan spam" => {
+            :auth       => :op,
+            :exact_args => 1,
+            :excess     => false,
+            :func => lambda { |nick, nyans|
+              nyans = nyans.to_i
+              nyans.times do 
+                @@irc.speak "nyan"
+              end
+              return
+          },
+        },
 
         "add bro" => {
             :auth       => :normal,
